@@ -1,0 +1,24 @@
+{
+  "name": "watering-socket-server",
+  "version": "1.0.0",
+  "description": "Lightweight Bidirectional WebSocket Gateway Relay for Smart Irrigation (Mobile <-> Hardware)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "sim": "node mock-hardware.js"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "ws": "^8.18.0"
+  },
+  "keywords": [
+    "websocket",
+    "iot",
+    "esp32",
+    "relay-server",
+    "irrigation"
+  ],
+  "author": "",
+  "license": "MIT"
+}
