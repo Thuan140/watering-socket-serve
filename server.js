@@ -33,6 +33,32 @@ const hardwareClients = new Set();
 const mobileClients = new Set();
 let lastStatusUpdate = null;
 let lastProfile = null;
+let serverScheduledTimes = ["06:00", "17:00"];
+let lastServerTriggerMinute = "";
+
+function checkServerSchedule() {
+  const now = new Date();
+  // Giờ Việt Nam UTC+7
+  const vnTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" }));
+  const hours = vnTime.getHours().toString().padStart(2, "0");
+  const minutes = vnTime.getMinutes().toString().padStart(2, "0");
+  const timeStr = `${hours}:${minutes}`;
+
+  if (timeStr === lastServerTriggerMinute) return;
+
+  if (serverScheduledTimes.includes(timeStr)) {
+    lastServerTriggerMinute = timeStr;
+    console.log(`⏰ [Server Gateway] ĐÚNG GIỜ HẸN TƯỚI TỰ ĐỘNG (${timeStr} UTC+7)! Đang phát lệnh start_auto tới Hardware...`);
+    const autoPayload = JSON.stringify({ cmd: "start_auto" });
+    for (const hw of hardwareClients) {
+      if (hw.readyState === WebSocket.OPEN) {
+        hw.send(autoPayload);
+      }
+    }
+  }
+}
+
+setInterval(checkServerSchedule, 10000);
 
 function getClientIp(req) {
   return req.headers["x-forwarded-for"] || req.socket.remoteAddress || "unknown";
@@ -116,6 +142,11 @@ wss.on("connection", (ws, req) => {
         }
 
         console.log(`📤 [${logTimestamp()}] [Mobile -> Hardware]: Lệnh "${data.cmd}" |`, JSON.stringify(data));
+
+        if (data.cmd === "set_profile" && Array.isArray(data.start_times)) {
+          serverScheduledTimes = data.start_times.map((t) => t.trim());
+          console.log(`📋 [${logTimestamp()}] [Server Gateway] Đã lưu lịch hẹn tưới 24/7 trên Cloud:`, serverScheduledTimes);
+        }
 
         if (hardwareClients.size === 0) {
           console.warn(`⚠️ [${logTimestamp()}] Chưa có bo mạch Hardware (ESP32) nào kết nối vào Server.`);
