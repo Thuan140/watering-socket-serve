@@ -48,6 +48,10 @@ function checkServerSchedule() {
 
   if (serverScheduledTimes.includes(timeStr)) {
     lastServerTriggerMinute = timeStr;
+    if (lastStatusUpdate && lastStatusUpdate.auto_running === true) {
+      console.log(`⏰ [Server Gateway] Giờ hẹn (${timeStr}) nhưng ESP32 đang trong trạng thái tự động tưới (auto_running).`);
+      return;
+    }
     console.log(`⏰ [Server Gateway] ĐÚNG GIỜ HẸN TƯỚI TỰ ĐỘNG (${timeStr} UTC+7)! Đang phát lệnh start_auto tới Hardware...`);
     const autoPayload = JSON.stringify({ cmd: "start_auto" });
     for (const hw of hardwareClients) {
@@ -97,10 +101,10 @@ wss.on("connection", (ws, req) => {
       const data = JSON.parse(messageStr);
 
       // --- 1. PHÂN BIỆT RÕ RÀNG BẢN TIN PHẦN CỨNG vs LỆNH MOBILE ---
-      // Hardware gửi: "event": "status_update" HOẶC kết quả response {"status": "ok", "cmd": "..."} / {"status": "error"}
+      // Hardware gửi: "event": "status_update" HOẶC kết quả response {"status": "ok", ...} / {"status": "error", "message": "..."}
       const isHardwareResponse =
-        data.event === "status_update" ||
-        (data.status !== undefined && (data.cmd !== undefined || data.state !== undefined || data.valves_status !== undefined));
+        data.event !== undefined ||
+        data.status !== undefined;
 
       // Mobile gửi: Lệnh chứa "cmd" và KHÔNG CÓ "status" (ví dụ: {"cmd": "get_profile"}, {"cmd": "set_profile", ...})
       const isMobileCommand = data.cmd !== undefined && data.status === undefined;
@@ -122,7 +126,7 @@ wss.on("connection", (ws, req) => {
           lastProfile = data;
         }
 
-        console.log(`📥 [${logTimestamp()}] [Hardware -> Mobile]:`, data.event ? `event: ${data.event}` : `cmd: ${data.cmd || data.status}`);
+        console.log(`📥 [${logTimestamp()}] [Hardware -> Mobile]:`, data.event ? `event: ${data.event}` : (data.cmd ? `cmd: ${data.cmd}` : `status: ${data.status}`));
 
         // Broadcast phản hồi này tới TẤT CẢ client Mobile
         for (const mobileWs of mobileClients) {

@@ -1,4 +1,4 @@
-﻿# WATERING SOCKET SERVER GATEWAY (KHÔNG CẦN DATABASE)
+# WATERING SOCKET SERVER GATEWAY (KHÔNG CẦN DATABASE)
 
 Hệ thống WebSocket Gateway Relay siêu nhẹ, hiệu năng cao, đóng vai trò là trạm trung chuyển dữ liệu thời gian thực 2 chiều giữa **Mobile App (Lưu dữ liệu Local)** và **Hardware (ESP32)**.
 
@@ -25,18 +25,7 @@ npm start
 
 ---
 
-## 2. Cách Test Hệ Thống Khi Không Cắm Mạch Thật (Mock ESP32)
-
-Nếu bạn không có bo mạch thật bên cạnh, hãy mở thêm một cửa sổ Terminal khác và chạy:
-```bash
-npm run sim
-# Hoặc: node mock-hardware.js
-```
-Bộ giả lập sẽ tự động kết nối vào Socket Server và mô phỏng phản hồi 20 van $100\%$ chuẩn theo [Data_Strucrure.md](../Data_Strucrure.md).
-
----
-
-## 3. Cấu Hình Trên Ứng Dụng Mobile (React Native)
+## 2. Cấu Hình Trên Ứng Dụng Mobile (React Native)
 
 Mở App Mobile, vào màn hình **Cấu Hình Hệ Thống (SystemSetting)**:
 - Điền địa chỉ WebSocket: `ws://<IP_MÁY_TÍNH_CỦA_BẠN>:81` (Ví dụ: `ws://192.168.100.105:81` hoặc `ws://localhost:81` nếu chạy trên giả lập).
