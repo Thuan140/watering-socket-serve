@@ -1,43 +1,49 @@
-# WATERING SOCKET SERVER GATEWAY (KHÔNG CẦN DATABASE)
+# 🌱 Watering Socket Server Gateway
 
-Hệ thống WebSocket Gateway Relay siêu nhẹ, hiệu năng cao, đóng vai trò là trạm trung chuyển dữ liệu thời gian thực 2 chiều giữa **Mobile App (Lưu dữ liệu Local)** và **Hardware (ESP32)**.
+Hệ thống WebSocket & HTTP Gateway siêu nhẹ làm cầu nối thời gian thực 2 chiều giữa **Mobile App** và **Hardware (ESP32)**, không cần Database.
 
 ```
-Mobile App (Lưu DB Local) <---(WebSocket)---> SOCKET SERVER <---(WebSocket)---> Hardware (ESP32)
+Mobile App <---(WebSocket)---> SOCKET SERVER GATEWAY <---(WebSocket)---> Hardware (ESP32)
 ```
 
 ---
 
-## 1. Cách Khởi Động Server Trên Máy Tính
+## 🌟 Tính Năng Chính
 
-### Bước 1: Cài đặt thư viện (chỉ 1 lần đầu)
+- **Relay 2 chiều tức thì**: Chuyển tiếp lệnh từ Mobile App tới ESP32 và broadcast trạng thái van/tiến trình ngược lại App.
+- **Tự động nhận diện thiết bị**: Phân định ESP32 qua `?role=hardware` và Mobile App qua kết nối thông thường.
+- **In-Memory Cache (RAM)**: Lưu trạng thái van gần nhất, đẩy ngay cho Mobile App khi vừa mở mà không cần chờ đợi.
+- **Lập lịch tưới 24/7 trên Cloud**: Tự động lưu `start_times` khi App cài đặt và kích hoạt tưới đúng giờ hẹn (UTC+7) ngay cả khi điện thoại tắt app/mất mạng.
+- **Cảnh báo kết nối**: Báo offline khi ESP32 ngắt kết nối và báo lỗi rõ ràng nếu App gửi lệnh lúc ESP32 chưa online.
+- **HTTP Health Check**: Endpoint `/health` phục vụ kiểm tra trạng thái và giám sát uptime/số lượng client.
+
+---
+
+## 🚀 Cài Đặt & Chạy Server (Local)
+
+### 1. Cài đặt & Khởi động
 ```bash
-cd "c:\Watering Automation System\socket-server"
+cd socket-server
 npm install
+npm start       # Hoặc: npm run dev (tự động reload khi sửa code)
 ```
+*Server mặc định chạy tại cổng `81` (`ws://0.0.0.0:81`).*
 
-### Bước 2: Chạy Socket Server
-```bash
-npm start
-# Hoặc: node server.js
-```
-*Mặc định Server sẽ lắng nghe tại cổng `81` (`ws://0.0.0.0:81`).*
+### 2. Kiểm tra Health Check
+Truy cập `http://localhost:81/health` trên trình duyệt để kiểm tra trạng thái server và số lượng client đang kết nối.
 
 ---
 
-## 2. Cấu Hình Trên Ứng Dụng Mobile (React Native)
+## 🔌 Cấu Hình Kết Nối Thiết Bị
 
-Mở App Mobile, vào màn hình **Cấu Hình Hệ Thống (SystemSetting)**:
-- Điền địa chỉ WebSocket: `ws://<IP_MÁY_TÍNH_CỦA_BẠN>:81` (Ví dụ: `ws://192.168.100.105:81` hoặc `ws://localhost:81` nếu chạy trên giả lập).
-- Bấm **Kiểm Tra & Lưu Địa Chỉ WS**.
+- **Bo mạch ESP32**: `ws://<IP_SERVER>:81?role=hardware` (Local) hoặc `wss://<DOMAIN>?role=hardware` (Cloud).
+- **Mobile App**: `ws://<IP_SERVER>:81` (Local) hoặc `wss://<DOMAIN>` (Cloud).
 
 ---
 
-## 4. Hướng Dẫn Deploy Lên Cloud Để Điều Khiển Qua 4G Từ Xa
+## ☁️ Deploy Lên Cloud (Render / Railway / VPS)
 
-Nếu muốn điều khiển hệ thống qua Internet/4G khi ra khỏi nhà, bạn có thể đưa thư mục `socket-server` này lên các dịch vụ Cloud miễn phí:
-1. **Render.com** (Web Service, chọn Node.js, lệnh chạy: `node server.js`).
-2. **Railway.app** (Deploy từ GitHub trong 1 cú click).
-3. **Fly.io** hoặc **VPS cá nhân**.
+1. **Start Command**: `node server.js`
+2. **Health Check Path**: `/health`
+3. **Môi trường**: Server tự động nhận diện cổng qua biến môi trường `process.env.PORT`.
 
-Sau khi deploy xong, bạn sẽ có một địa chỉ WebSocket online (ví dụ: `wss://my-watering-server.onrender.com`), điền địa chỉ này vào ESP32 và Mobile App là hệ thống có thể điều khiển từ bất kỳ đâu trên thế giới!
